@@ -1,0 +1,123 @@
+Broker
+消息中转角色，负责存储消息，转发消息，及RocketMQ Server
+
+Namesrv
+一个无状态的名称服务，可以集群部署，每个broker启动的时候都会向名称服务器注册，主要是接收broker的注册，接收客户端的路由请求并返回路由信息
+
+Tag
+用于对消息进行过滤，理解为message的标记，同一业务不同目的的message可以用相同的topic但是可以用不同的tag来区分
+
+下载地址：https://rocketmq.apache.org/release_notes/
+
+下载安装：
+wget https://archive.apache.org/dist/rocketmq/4.3.2/rocketmq-all-4.3.2-bin-release.zip
+unzip -d /usr rocketmq-all-4.3.2-bin-release.zip
+mv /usr/rocketmq-all-4.3.2-bin-release /usr/rocketmq
+
+启动NameServer
+nohup sh bin/mqnamesrv > logs/rocketmqlogs/namesrv.log 2>&1 &
+修改占用内存 cat bin/runserver.sh
+
+启动Broker
+nohup sh bin/mqbroker -n localhost:9876 > logs/rocketmqlogs/broker.log 2>&1 &
+修改占用内存 cat bin/runbroker.sh
+启动时如果服务器有两个网卡则需要配置固定IP
+cat conf/broker.conf
+添加 brokerIP1=192.168.100.242
+
+停止Broker
+bin/mqshutdown broker
+
+停止NameServer
+bin/mqshutdown namesrv
+
+发送消息
+export NAMESRV_ADDR=localhost:9876
+bin/tools.sh org.apache.rocketmq.example.quickstart.Producer
+
+接收消息
+bin/tools.sh org.apache.rocketmq.example.quickstart.Consumer
+
+异常
+No route info of this topic. xxx
+创建主题命令
+/bin/mqadmin updateTopic -n '192.168.100.242:9876' -c DefaultCluster -t xxx
+
+生产者类型：
+1.同步发送消息
+2.异步发送消息
+一般用来对方法调用响应时间有较严格要求的情况下，异步调用，立即返回。
+不同于同步的唯一在于：send方法调用的时候多携带一个回调接口参数，用来异步处理消息发送结果。
+3.单向模式
+一般用于对可靠性要求不高的消息发送。调用sendOneway方法。且方法不返回任何值。
+
+生产者保证数据完整性：
+写入磁盘的方式 同步/异步
+主从broker 同步/异步
+conf/下有集群配置文件样例 2m-2s-async 2m-2s-sync 2m-noslave
+
+#所属集群名称
+brokerClusterName=DefaultCluster
+#broker名字
+brokerName=broker-a
+#0表示Master >0表示slave
+brokerid=0
+#nameServer地址,分号分割
+namesrvAddr
+#在发送消息时，自动创建服务器不存在的topic，默认创建队列数
+defaultTopicQueueNums=5
+#是否允许Broker自动创建Topic
+autoCreateTopicEnable=true
+#是否允许Broker自动创建订阅组
+autoCreateSubscriptionGroup=true
+#Broker对外服务的监听端口
+listPort=10911
+#删除文件时间点。默认凌晨4点
+deleteWhen=04
+#文件保留时间，默认48小时
+fileReservedTime=48
+#commitLog每个文件的大小默认1G
+mapedFileSizeCommitLog=1073741824
+#ConsumeQueue每个文件默认存30W条
+mapedFileSizeConsumeQueue=30000
+#存储路径
+storePathRootDir=/usr/local/xxx/store
+#commitLog存储路径
+storePathCommitLog
+#消费队列存储路径
+storePathConsumeQueue
+#消息索引存储路径
+storePathIndex
+
+刷盘方式
+ASYNC_FLUSH 异步刷盘
+SYNC_FLUSH 同步刷盘
+flushDiskType=
+#发消息线程池数量
+sendMessageThreadPoolNums=128
+#拉消息线程池数量
+pullMessageThreadPollNums=128
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
